@@ -4,10 +4,8 @@ import urllib.parse
 from urllib.parse import urlsplit, quote
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from IPython.display import Image, display
-import numpy as np
+from tqdm import tqdm
 import pandas as pd
-from pprint import pprint
 
 # url = 'https://pokemon.fandom.com/ko/wiki/흥나숭_(포켓몬)'
 # url = 'https://pokemon.fandom.com/ko/wiki/나몰빼미_(포켓몬)'
@@ -29,7 +27,7 @@ info = []
 erros = []
 target_number = 1017
 cnt = 0
-while True:
+for _ in tqdm(range(target_number+2)):
     cnt += 1
     req = Request(encoded_url, headers={'User-Agent': 'Mozilla/5.0'})
     res = urlopen(req)
@@ -44,16 +42,16 @@ while True:
         urllib.request.urlretrieve(img_url, filepath)
     except:
         filepath = None
-    doc_text = '\n'.join([p.text.strip() for p in soup.find_all("p")])
+    doc_text = '\n'.join([p.text.replace('\n', '').strip() for p in soup.find_all("p")])
     types = [poke_type['title'].split(' ')[0].strip() for poke_type in soup.select('tbody > tr > td > div')[0].select('span > a')]
-    
-    print(name, number, types)
+
     info.append(dict(
         name=name,
         number=number,
-        types=','.join(types),
+        types=types,
         doc_text=doc_text,
-        image_path=filepath
+        image_path=filepath,
+        url=encoded_url
     ))
     next_monster = soup.find("table").findAll("a")[-1]['href']
     encoded_url = "https://pokemon.fandom.com" + next_monster
